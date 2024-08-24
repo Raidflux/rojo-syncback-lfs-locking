@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows, macos, linux]
+        os: [windows, macos, macos, linux]
         include:
           - os: windows
             goos: windows
@@ -47,7 +47,6 @@ jobs:
     - name: Set output file name
       run: |
         echo "EXECUTABLE_FILE=${{ env.EXECUTABLE_NAME }}${{ matrix.extension }}" >> $GITHUB_ENV
-        echo "OUTPUT_FILE=output/${{ matrix.goos }}-${{ matrix.goarch }}/$EXECUTABLE_FILE" >> $GITHUB_ENV
 
     - name: Go build
       env:
@@ -62,7 +61,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.goos }}-${{ matrix.goarch }}
+        name: ${{ env.EXECUTABLE_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}
         path: ${{ env.EXECUTABLE_FILE }}
 
   release:
@@ -78,8 +77,12 @@ jobs:
       with:
         path: ./releases
 
-    - name: test
+    - name: Zip artifacts
       run: |
+        ls -R ./releases
+        for file in ./releases/*; do
+          zip -r $file.zip $file
+        done
         ls -R ./releases
 
     - name: Find and update release with artifacts
