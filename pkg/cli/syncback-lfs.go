@@ -13,11 +13,13 @@ func SyncbackLFS(input string) {
 	lfsFiles, err := git.LfsListFiles()
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
 	syncbackFiles, err := syncback.ListSyncbackFiles(input)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
 	filesThatNeedLocking := []string{}
@@ -26,9 +28,45 @@ func SyncbackLFS(input string) {
 			cleanFile := filepath.Clean(file)
 			clearLfsFile := filepath.Clean(lfsFile)
 			if cleanFile == clearLfsFile {
-				filesThatNeedLocking = append(filesThatNeedLocking, cleanFile+cleanFile)
+				filesThatNeedLocking = append(filesThatNeedLocking, cleanFile)
+				break
 			}
 		}
+	}
+
+	lockedFiles, err := git.LfsListLockedFiles()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	for _, theirFile := range lockedFiles.Theirs {
+		for _, fileThatNeedsLocking := range filesThatNeedLocking {
+			if theirFile.Path == fileThatNeedsLocking {
+				zenity.Error(
+					fmt.Sprintf("File %s is already locked by %s", theirFile.Path, theirFile.Owner.Name),
+				)
+				return
+			}
+		}
+	}
+
+	for _, ourFile := range lockedFiles.Ours {
+		toRemove := -1
+		for i, fileThatNeedsLocking := range filesThatNeedLocking {
+			if ourFile.Path == fileThatNeedsLocking {
+				toRemove = i
+				break
+			}
+		}
+
+		if toRemove != -1 {
+			filesThatNeedLocking = append(filesThatNeedLocking[:toRemove], filesThatNeedLocking[toRemove+1:]...)
+		}
+	}
+
+	if len(filesThatNeedLocking) == 0 {
+		return
 	}
 
 	infoMessage := "Files that need locking:\n\n"
@@ -45,7 +83,20 @@ func SyncbackLFS(input string) {
 		zenity.Icon(zenity.WarningIcon),
 	)
 
-	if err != nil {
-		fmt.Println(err)
+	if err == nil {
+		for _, file := range filesThatNeedLocking {
+			if err := git.LfsLock(file); err != nil {
+				fmt.Println(err)
+				zenity.Error(
+					err.Error(),
+					zenity.Title("Failed to lock file"),
+				)
+			}
+		}
+
+		zenity.Info(
+			fmt.Sprintf("Successfully locked %d files", len(filesThatNeedLocking)),
+			zenity.Title("Files locked"),
+		)
 	}
 }

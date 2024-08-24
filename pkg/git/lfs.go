@@ -2,10 +2,13 @@ package git
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 func IsLfsInstalled() error {
@@ -88,38 +91,41 @@ func LfsListFiles() ([]string, error) {
 	return lockableFiles, nil
 }
 
-func LfsListLockedFiles() ([]string, error) {
-	cmd := exec.Command("git", "lfs", "locks")
+type lfsFileLock struct {
+	ID    string `json:"id"`
+	Path  string `json:"path"`
+	Owner struct {
+		Name string `json:"name"`
+	}
+
+	LockedAt time.Time `json:"locked_at"`
+}
+
+type lfsLocksContainer struct {
+	Ours   []lfsFileLock `json:"ours"`
+	Theirs []lfsFileLock `json:"theirs"`
+}
+
+func LfsListLockedFiles() (*lfsLocksContainer, error) {
+	cmd := exec.Command("git", "lfs", "locks", "--verify", "--json")
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {
 		return nil, fmt.Errorf("git-lfs locks failed: %s %v", output, err)
 	}
 
-	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
-	var lockedFiles []string
-
-	for _, line := range lines {
-		parts := strings.Split(line, " ")
-		if len(parts) == 2 {
-			lockedFiles = append(lockedFiles, parts[1])
-		}
+	var locks lfsLocksContainer
+	if err := json.Unmarshal(output, &locks); err != nil {
+		return nil, err
 	}
 
-	return lockedFiles, nil
-}
-
-func LfsIsLockMine(file string) (bool, error) {
-	cmd := exec.Command("git", "lfs", "locks", "--json", file)
-	output, err := cmd.CombinedOutput()
-
-	if err != nil {
-		return false, fmt.Errorf("git-lfs locks failed: %s %v", output, err)
+	for i := range locks.Ours {
+		locks.Ours[i].Path = filepath.Clean(locks.Ours[i].Path)
 	}
 
-	if strings.Contains(string(output), "error") {
-		return false, nil
+	for i := range locks.Theirs {
+		locks.Theirs[i].Path = filepath.Clean(locks.Theirs[i].Path)
 	}
 
-	return true, nil
+	return &locks, nil
 }

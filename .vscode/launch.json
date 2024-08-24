@@ -10,10 +10,10 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/main.go",
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/TestProject",
             "args": [
                 "--input",
-                "./TestProject/Project-Structure-Template.rbxl"
+                "./Project-Structure-Template.rbxl"
             ]
         }
 
