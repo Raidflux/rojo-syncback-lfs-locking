@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows, macos, macos, linux]
+        os: [windows, macos-intel, macos, linux]
         include:
           - os: windows
             goos: windows
