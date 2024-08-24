@@ -22,7 +22,7 @@ jobs:
             goos: windows
             goarch: amd64
             extension: .exe
-          - os: macos
+          - os: macos-intel
             goos: darwin
             goarch: amd64
             extension: ""
