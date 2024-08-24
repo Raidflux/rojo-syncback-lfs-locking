@@ -12,6 +12,7 @@
             "program": "${workspaceFolder}/cmd/main.go",
             "cwd": "${workspaceFolder}/TestProject",
             "args": [
+                "watch",
                 "--input",
                 "./Project-Structure-Template.rbxl"
             ]

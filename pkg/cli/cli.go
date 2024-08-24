@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -13,15 +14,15 @@ var rootCmd = &cobra.Command{
 	Use:   "syncback-lfs",
 	Short: "Wrapper for Rojo syncback to add file watching and LFS file locking support into fully managed rojo workflows with the goal to create a more professional development workflow",
 	Run: func(cmd *cobra.Command, args []string) {
-		SyncbackLFS(syncbackLfsInput)
+		SyncbackLFS(cmd.Context(), syncbackLfsInput)
 	},
 	CompletionOptions: cobra.CompletionOptions{
 		DisableDefaultCmd: true,
 	},
 }
 
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+func Execute(ctx context.Context) {
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

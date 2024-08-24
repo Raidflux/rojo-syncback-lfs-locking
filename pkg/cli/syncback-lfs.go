@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/ncruces/zenity"
 )
 
-func SyncbackLFS(input string) {
+func SyncbackLFS(ctx context.Context, input string) {
 	lfsFiles, err := git.LfsListFiles()
 	if err != nil {
 		fmt.Println(err)
@@ -45,6 +46,8 @@ func SyncbackLFS(input string) {
 			if theirFile.Path == fileThatNeedsLocking {
 				zenity.Error(
 					fmt.Sprintf("File %s is already locked by %s", theirFile.Path, theirFile.Owner.Name),
+					zenity.Title("File already locked"),
+					zenity.Context(ctx),
 				)
 				return
 			}
@@ -78,6 +81,7 @@ func SyncbackLFS(input string) {
 			zenity.Title("Files need to be locked"),
 			zenity.OKLabel("Lock files"),
 			zenity.Icon(zenity.WarningIcon),
+			zenity.Context(ctx),
 		)
 
 		if err == nil {
@@ -87,6 +91,7 @@ func SyncbackLFS(input string) {
 					zenity.Error(
 						err.Error(),
 						zenity.Title("Failed to lock file"),
+						zenity.Context(ctx),
 					)
 				}
 			}
@@ -94,6 +99,7 @@ func SyncbackLFS(input string) {
 			zenity.Info(
 				fmt.Sprintf("Successfully locked %d files", len(filesThatNeedLocking)),
 				zenity.Title("Files locked"),
+				zenity.Context(ctx),
 			)
 		}
 	}
