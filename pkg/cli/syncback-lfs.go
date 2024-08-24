@@ -65,38 +65,44 @@ func SyncbackLFS(input string) {
 		}
 	}
 
-	if len(filesThatNeedLocking) == 0 {
+	if len(filesThatNeedLocking) > 0 {
+		infoMessage := "Files that need locking:\n\n"
+
+		for _, file := range filesThatNeedLocking {
+			fmt.Println("Needs locking: ", file)
+			infoMessage += file + "\n\n"
+		}
+
+		err = zenity.Question(
+			infoMessage,
+			zenity.Title("Files need to be locked"),
+			zenity.OKLabel("Lock files"),
+			zenity.Icon(zenity.WarningIcon),
+		)
+
+		if err == nil {
+			for _, file := range filesThatNeedLocking {
+				if err := git.LfsLock(file); err != nil {
+					fmt.Println(err)
+					zenity.Error(
+						err.Error(),
+						zenity.Title("Failed to lock file"),
+					)
+				}
+			}
+
+			zenity.Info(
+				fmt.Sprintf("Successfully locked %d files", len(filesThatNeedLocking)),
+				zenity.Title("Files locked"),
+			)
+		}
+	}
+
+	output, err := syncback.RunSyncback(input, false)
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
-	infoMessage := "Files that need locking:\n\n"
-
-	for _, file := range filesThatNeedLocking {
-		fmt.Println("Needs locking: ", file)
-		infoMessage += file + "\n\n"
-	}
-
-	err = zenity.Question(
-		infoMessage,
-		zenity.Title("Files need to be locked"),
-		zenity.OKLabel("Lock files"),
-		zenity.Icon(zenity.WarningIcon),
-	)
-
-	if err == nil {
-		for _, file := range filesThatNeedLocking {
-			if err := git.LfsLock(file); err != nil {
-				fmt.Println(err)
-				zenity.Error(
-					err.Error(),
-					zenity.Title("Failed to lock file"),
-				)
-			}
-		}
-
-		zenity.Info(
-			fmt.Sprintf("Successfully locked %d files", len(filesThatNeedLocking)),
-			zenity.Title("Files locked"),
-		)
-	}
+	fmt.Println(output)
 }
