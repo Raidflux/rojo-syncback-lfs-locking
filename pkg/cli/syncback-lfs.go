@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/Raidflux/rojo-syncback-lfs-locking/pkg/git"
 	"github.com/Raidflux/rojo-syncback-lfs-locking/pkg/syncback"
@@ -20,6 +21,9 @@ func SyncbackLFS(ctx context.Context, input string) {
 	syncbackFiles, err := syncback.ListSyncbackFiles(input)
 	if err != nil {
 		fmt.Println(err)
+		fmt.Print("\033[31m")
+		fmt.Println("Syncback failed", time.Now().Format("2006-01-02 15:04:05"))
+		fmt.Print("\033[0m")
 		return
 	}
 
@@ -107,8 +111,15 @@ func SyncbackLFS(ctx context.Context, input string) {
 	output, err := syncback.RunSyncback(input, false)
 	if err != nil {
 		fmt.Println(err)
+		fmt.Print("\033[31m")
+		fmt.Println("Syncback failed", time.Now().Format("2006-01-02 15:04:05"))
+		fmt.Print("\033[0m")
 		return
 	}
 
 	fmt.Println(output)
+
+	fmt.Print("\033[32m")
+	fmt.Println("Syncback successful", time.Now().Format("2006-01-02 15:04:05"))
+	fmt.Print("\033[0m")
 }
