@@ -56,6 +56,7 @@ jobs:
         go version
 
         go build -o ${{ env.EXECUTABLE_FILE }} cmd/main.go
+        chmod +x ${{ env.EXECUTABLE_FILE }}
         echo "Built ${{ env.EXECUTABLE_FILE }}"
 
     - name: Upload artifact
