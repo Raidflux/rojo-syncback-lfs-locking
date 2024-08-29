@@ -3,7 +3,7 @@
 ## Installation
 
 ```bash
-aftman add Raidflux/rojo-syncback-lfs-locking syncback-lfs
+rokit add Raidflux/rojo-syncback-lfs-locking syncback-lfs
 ```
 
 ## Usage
