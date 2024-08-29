@@ -80,11 +80,9 @@ jobs:
 
     - name: Zip artifacts
       run: |
-        ls -R ./releases
-        for file in ./releases/*; do
-          zip -r $file.zip $file
+        for file in ./releases/*/*; do
+          zip -j "${file%/*}.zip" "$file"
         done
-        ls -R ./releases
 
     - name: Find and update release with artifacts
       uses: softprops/action-gh-release@v2
