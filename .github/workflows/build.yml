@@ -16,24 +16,24 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows, macos-intel, macos, linux]
+        os: [windows]
         include:
           - os: windows
             goos: windows
             goarch: amd64
             extension: .exe
-          - os: macos-intel
-            goos: darwin
-            goarch: amd64
-            extension: ""
-          - os: macos
-            goos: darwin
-            goarch: arm64
-            extension: ""
-          - os: linux
-            goos: linux
-            goarch: amd64
-            extension: ""
+          # - os: macos-intel
+          #   goos: darwin
+          #   goarch: amd64
+          #   extension: ""
+          # - os: macos
+          #   goos: darwin
+          #   goarch: arm64
+          #   extension: ""
+          # - os: linux
+          #   goos: linux
+          #   goarch: amd64
+          #   extension: ""
 
     steps:
     - name: Checkout code
@@ -66,7 +66,7 @@ jobs:
         path: ${{ env.EXECUTABLE_FILE }}
 
   release:
-    if: startsWith(github.ref, 'refs/tags/')
+    # if: startsWith(github.ref, 'refs/tags/')
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -81,8 +81,10 @@ jobs:
     - name: Zip artifacts
       run: |
         for file in ./releases/*/*; do
-          zip -j "${file%/*}.zip" "$file"
+          parent_dir=$(basename "$(dirname "$file")")
+          zip -j "./releases/$parent_dir.zip" "$file"
         done
+        ls -la -R
 
     - name: Find and update release with artifacts
       uses: softprops/action-gh-release@v2
